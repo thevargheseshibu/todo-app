@@ -91,7 +91,7 @@ const HomePage = () => {
             });
 
             newItem.didChange = false;
-            setUndoStack(JSON.parse(JSON.stringify(items))); //repair with clone
+            setUndoStack([...undoStack,{ action: 'CREATE', items }]); //repair with clone
             setItems([...items, newItem]);
             setNewItemTitle('');
             setChangesMade(true);
@@ -287,11 +287,7 @@ const HomePage = () => {
 
     const handleInputChange = (e, itemId) => {
         const newTitle = e.target.value;
-        const itemToUpdate = items.find((item) => item.id === itemId);
-        const oldTitle = itemToUpdate.title;
-        const oldDone = itemToUpdate.done;
-
-        const change = { action: 'UPDATE', item: { id: itemId, oldTitle, oldDone, newTitle, newDone: oldDone } };
+        const change = { action: 'UPDATE', items };
 
         setUndoStack([...undoStack, change]);
         setItems(items.map((item) => (item.id === itemId ? { ...item, title: newTitle, didChange: true } : item)));
