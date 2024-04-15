@@ -30,7 +30,7 @@ const Register = ({ history }) => {
     };
     { console.log("change", errors) }
     return (
-        <div className="container mx-auto mt-8">
+        <div className="h-96 w-96 mt-8">
             <h2 className="text-2xl font-bold mb-4">Register</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="max-w-sm">
                 <div className="mb-4">

@@ -27,7 +27,7 @@ const Login = () => {
     };
 
     return (
-        <div className="container mx-auto mt-8">
+        <div className=" h-96 w-96 ">
             <h2 className="text-2xl font-bold mb-4">Login</h2>
             <form onSubmit={handleSubmit(onSubmit)} className="max-w-sm">
                 <div className="mb-4">

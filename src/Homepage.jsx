@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getToken } from './authentication/authService';
+import { logout } from './authentication/authService';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
     const [user, setUser] = useState('');
@@ -10,6 +12,9 @@ const HomePage = () => {
     const [undoStack, setUndoStack] = useState([]);
     const [redoStack, setRedoStack] = useState([]);
     const [jwtToken, setJwtToken] = useState('');
+    const navigate = useNavigate();
+
+    console.log("undoStack",undoStack,redoStack)
 
     useEffect(() => {
         // Fetch user name from JWT token
@@ -126,7 +131,7 @@ const HomePage = () => {
             });
 
             const updatedItems = items.filter((item) => item.id !== itemId);
-            setUndoStack(JSON.parse(JSON.stringify(items))); //repair with clone
+            setUndoStack([...undoStack,{ action: 'DELETE', items }]); //repair with clone
             setItems(updatedItems);
             setChangesMade(true);
         } catch (error) {
@@ -148,7 +153,7 @@ const HomePage = () => {
             return item;
         });
 
-        setUndoStack(JSON.parse(JSON.stringify(items))); // Backup the items
+        setUndoStack([...undoStack,{ action: 'EDIT', items }]); // Backup the items
         setItems(updatedItems); // Update items with disabled property changed
         setChangesMade(true);
 
@@ -238,7 +243,8 @@ const HomePage = () => {
     const handleUndo = () => {
         if (undoStack.length > 0) {
             const lastChange = undoStack.pop();
-            setRedoStack([...redoStack, lastChange]);
+            setRedoStack([...redoStack, { action: 'REDO', items }]);
+            console.log("lastChange",lastChange)
             undoAction(lastChange);
         }
     };
@@ -246,64 +252,44 @@ const HomePage = () => {
     const handleRedo = () => {
         if (redoStack.length > 0) {
             const lastChange = redoStack.pop();
-            setUndoStack([...undoStack, lastChange]);
+            setUndoStack([...undoStack, { action: 'UNDO', items }]);
             redoAction(lastChange);
         }
     };
 
     const undoAction = (change) => {
-        const { action, item } = change;
-        switch (action) {
-            case 'CREATE':
-                deleteItem(item.id);
-                break;
-            case 'UPDATE':
-                updateItem(item.id, { title: item.oldTitle, done: item.oldDone });
-                break;
-            case 'DELETE':
-                setItems([...items, item]);
-                break;
-            default:
-                break;
-        }
+        setItems(change.items)
     };
 
     const redoAction = (change) => {
-        const { action, item } = change;
-        switch (action) {
-            case 'CREATE':
-                setItems([...items, item]);
-                break;
-            case 'UPDATE':
-                updateItem(item.id, { title: item.newTitle, done: item.newDone });
-                break;
-            case 'DELETE':
-                deleteItem(item.id);
-                break;
-            default:
-                break;
-        }
+        setItems(change.items)
     };
 
     const handleInputChange = (e, itemId) => {
         const newTitle = e.target.value;
         const change = { action: 'UPDATE', items };
 
-        setUndoStack([...undoStack, change]);
+        setUndoStack([...undoStack,{ action: 'UPDATE', items }]);
         setItems(items.map((item) => (item.id === itemId ? { ...item, title: newTitle, didChange: true } : item)));
         setChangesMade(true);
     };
 
+    const handleLogoutClick = () => {
+        logout()
+    
+
+        
+          navigate('/login'); 
+       
+      };
+
     return (
-        <div className="container mx-auto mt-8">
+        <div className="containe mx-auto mt-8">
             <h1 className="text-3xl font-bold mb-4">To-Do List</h1>
             <div className="flex items-center justify-between mb-4">
                 <p className="text-lg">Welcome, {user}</p>
                 <button
-                    onClick={() => {
-                        localStorage.removeItem('jwt_token');
-                        window.location.href = '/login'; // Redirect to login page
-                    }}
+                    onClick={handleLogoutClick}
                     className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none"
                 >
                     Logout
@@ -369,12 +355,14 @@ const HomePage = () => {
                     <button
                         onClick={handleUndo}
                         className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none"
+                        disabled={!(undoStack.length>0)}
                     >
                         Undo
                     </button>
                     <button
                         onClick={handleRedo}
                         className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none"
+                        disabled={!(redoStack.length>0)}
                     >
                         Redo
                     </button>
