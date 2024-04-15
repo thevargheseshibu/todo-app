@@ -9,7 +9,7 @@ function NavBar() {
     const location = useLocation();
 
     const handleButtonClick = () => {
-        if (isAuthenticated()) { logout() }
+        if (isAuthenticated()) { logout(); navigate('/login');  }
         else {
             switch (location.pathname) {
                 case '/login':

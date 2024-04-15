@@ -1,14 +1,22 @@
 // Login.js
-import React, { useState } from 'react';
+import React, { useEffect, useState ,useContext} from 'react';
 
 import axios from 'axios';
 import { useForm } from "react-hook-form"
-import { login } from './authentication/authService';
+import { login ,isAuthenticated as tokenVerify} from './authentication/authService';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from './authentication/authContext';
 
 const Login = () => {
 
 
     const { register, handleSubmit, formState: { errors } } = useForm()
+    const navigate = useNavigate();
+    const {isAuthenticated,setAuthenticated} = useContext(AuthContext);
+
+    useEffect(()=>{
+        isAuthenticated?.isAuthenticated &&  navigate('/'); 
+    },[])
 
     const onSubmit = async (data) => {
 
@@ -17,12 +25,14 @@ const Login = () => {
             console.log("response", response)
             // Store JWT token in local storage
             login(response?.data?.token);
+            setAuthenticated(tokenVerify())
+            navigate('/'); 
 
             // Redirect user to home page
 
         } catch (error) {
             console.error('Registration error:', error);
-            alert(error);
+            alert(error?.response?.data.errors[0]?.message||error);
         }
     };
 

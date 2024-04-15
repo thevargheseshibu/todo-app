@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getToken } from './authentication/authService';
-import { logout } from './authentication/authService';
+
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -106,22 +106,6 @@ const HomePage = () => {
         }
     };
 
-    const updateItem = async () => {
-        items.forEach(async (item) => {
-            if (item.didChange) {
-                try {
-                    await axios.put(`https://good-monday-js-test.vercel.app/to-do-items/${item.id}`, item, {
-                        headers: { Authorization: `Bearer ${jwtToken}` }
-                    });
-
-                } catch (error) {
-                    console.error('Error updating item:', error);
-                }
-            }
-
-        })
-
-    };
 
     const deleteItem = async (itemId) => {
         console.log("item Id", itemId)
@@ -164,16 +148,21 @@ const HomePage = () => {
     };
 
     const handleDoneToggle = (itemId) => {
-        const itemToUpdate = items.find((item) => item.id === itemId);
-        const updatedItem = { ...itemToUpdate, done: !itemToUpdate.done, didChange: true };
-        updateItem(itemId, updatedItem);
+        const updatedItems = items.map((item) => {
+            if (item.id === itemId) {
+                return {
+                    ...item,
+                    done: !item.done,
+                    didChange:true
+                };
+            }
+            return item;
+        });
+        setUndoStack([...undoStack,{ action: 'TOGGLE', items }]);
+        setChangesMade(true);
+        setItems(updatedItems)
     };
 
-    const handleTitleChange = (itemId, newTitle) => {
-        const itemToUpdate = items.find((item) => item.id === itemId);
-        const updatedItem = { ...itemToUpdate, title: newTitle };
-        updateItem(itemId, updatedItem);
-    };
 
     const handleDeleteItem = (itemId) => {
         deleteItem(itemId);
@@ -274,26 +263,14 @@ const HomePage = () => {
         setChangesMade(true);
     };
 
-    const handleLogoutClick = () => {
-        logout()
-    
-
-        
-          navigate('/login'); 
-       
-      };
+  
 
     return (
-        <div className="containe mx-auto mt-8">
+        <div className="flex flex-col w-96  mt-8">
             <h1 className="text-3xl font-bold mb-4">To-Do List</h1>
             <div className="flex items-center justify-between mb-4">
                 <p className="text-lg">Welcome, {user}</p>
-                <button
-                    onClick={handleLogoutClick}
-                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none"
-                >
-                    Logout
-                </button>
+               
             </div>
             <div className="mb-4">
                 <input
@@ -310,6 +287,7 @@ const HomePage = () => {
                     Add
                 </button>
             </div>
+            <div className='h-64 overflow-y-scroll'>
             <ul>
                 {items.map((item) => (
                     <li key={item.id} className="flex items-center justify-between border-b py-2">
@@ -344,6 +322,7 @@ const HomePage = () => {
                     </li>
                 ))}
             </ul>
+            </div>
             {changesMade && (
                 <div className="mt-4">
                     <button
@@ -354,14 +333,14 @@ const HomePage = () => {
                     </button>
                     <button
                         onClick={handleUndo}
-                        className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none"
+                        className={`ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none ${(undoStack.length>0)?"":"pointer-events-none opacity-30"} `}
                         disabled={!(undoStack.length>0)}
                     >
                         Undo
                     </button>
                     <button
                         onClick={handleRedo}
-                        className="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none"
+                        className={`ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 focus:outline-none ${(redoStack.length>0)?"":"pointer-events-none opacity-30"} `}
                         disabled={!(redoStack.length>0)}
                     >
                         Redo
