@@ -1,6 +1,11 @@
 # To Do List with Authentication
 A React application for managing your tasks with registration, login, and CRUD operations.
 
+![Login](https://github.com/thevargheseshibu/todo-app/blob/master/Todo%20images/Login.png)
+![HomePage](https://github.com/thevargheseshibu/todo-app/blob/master/Todo%20images/Homepage.png)
+![Toast](https://github.com/thevargheseshibu/todo-app/blob/master/Todo%20images/Toast.png)
+![Register](https://github.com/thevargheseshibu/todo-app/blob/master/Todo%20images/Logout.png)
+
 ## Netlify Status: 
 Netlify Deployment Link: https://[your-netlify-app-url]  Vercel Status: Vercel Deployment Link: https://[your-vercel-app-url]  (Replace placeholders with your deployment links)
 
