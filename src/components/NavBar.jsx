@@ -20,6 +20,7 @@ function NavBar() {
                     break;
 
                 default:
+                    navigate('/login');
                     break;
             }
         }

@@ -1,20 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import axios from 'axios';
 import { getToken } from './authentication/authService';
 
-import { useNavigate } from 'react-router-dom';
+import { AuthContext } from './authentication/authContext';
+import Spinner from './components/Spinner';
+import { ToastContainer, toast } from 'react-toastify';
+  import 'react-toastify/dist/ReactToastify.css';
+ 
+  
+
+  //API
+  import { API_CREATE_ITEM,API_FETCH_DATA } from './api/apiEndpoints';
 
 const HomePage = () => {
-    const [user, setUser] = useState('');
     const [items, setItems] = useState([]);
     const [newItemTitle, setNewItemTitle] = useState("");
     const [changesMade, setChangesMade] = useState(false);
     const [undoStack, setUndoStack] = useState([]);
     const [redoStack, setRedoStack] = useState([]);
     const [jwtToken, setJwtToken] = useState('');
-    const navigate = useNavigate();
+    const [spinner,setSpinner] = useState(false);
+    const {userName} = useContext(AuthContext);
 
     console.log("undoStack",undoStack,redoStack)
+    
 
     useEffect(() => {
         // Fetch user name from JWT token
@@ -23,10 +32,11 @@ const HomePage = () => {
 
         const fetchData = async (token) => {
             try {
-                const response = await fetch('https://good-monday-js-test.vercel.app/to-do-items/', {
+                const response = await fetch(API_FETCH_DATA , {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (!response.ok) {
+                    toast("Error : Failed to fetch data");
                     throw new Error('Failed to fetch data');
                 }
                 const data = await response.json();
@@ -48,8 +58,6 @@ const HomePage = () => {
 
 
         if (token) {
-            const decodedToken = parseJwt(token);
-            setUser(decodedToken.username);
             setJwtToken(token);
             fetchData(token);
         }
@@ -60,38 +68,16 @@ const HomePage = () => {
     }, []);
 
 
-
-    const parseJwt = (token) => {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-            atob(base64)
-                .split('')
-                .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-                .join('')
-        );
-        return JSON.parse(jsonPayload);
-    };
-
-    const fetchItems = async () => {
-        try {
-            const response = await axios.get('https://good-monday-js-test.vercel.app/to-do-items/', {
-                headers: { Authorization: `Bearer ${jwtToken}` }
-            }
-            );
-            setItems(response.data.items);
-        } catch (error) {
-            console.error('Error fetching items:', error);
-        }
-    };
-
+  
     console.log("newitem", items);
 
     const createItem = async () => {
+        setSpinner(true);
         try {
-            const newItem = { id: `${items.length + 1}`, title: newItemTitle, done: false, didChange: false, disabled: true };
+            const newItem = { id: `${Math.max(...items.map(obj => obj.id)) + 1}`, title: newItemTitle, done: false, didChange: false, disabled: true };
             const { didChange, disabled, ...reqData } = newItem
-            const response = await axios.post('https://good-monday-js-test.vercel.app/to-do-items/', reqData, {
+
+            const response = await axios.post(API_CREATE_ITEM, reqData, {
                 headers: { Authorization: `Bearer ${jwtToken}` }
             });
 
@@ -100,15 +86,20 @@ const HomePage = () => {
             setItems([...items, newItem]);
             setNewItemTitle('');
             setChangesMade(true);
+            setSpinner(false);
+            toast("Your item has been created");
 
         } catch (error) {
             console.error('Error creating item:', error);
+            toast(`Error : ${error?.message||"Network Error Occured"}`);
+            setSpinner(false);
         }
     };
 
 
     const deleteItem = async (itemId) => {
         console.log("item Id", itemId)
+        setSpinner(true);
         try {
             await axios.delete(`https://good-monday-js-test.vercel.app/to-do-items/${itemId}`, {
                 headers: { Authorization: `Bearer ${jwtToken}` }
@@ -118,15 +109,17 @@ const HomePage = () => {
             setUndoStack([...undoStack,{ action: 'DELETE', items }]); //repair with clone
             setItems(updatedItems);
             setChangesMade(true);
+            setSpinner(false);
         } catch (error) {
             console.error('Error deleting item:', error);
+            setSpinner(false);
         }
     };
 
     const handleEditItem = (itemId) => {
         console.log("item Id", itemId);
 
-
+        setSpinner(true);
         const updatedItems = items.map((item) => {
             if (item.id === itemId) {
                 return {
@@ -140,6 +133,7 @@ const HomePage = () => {
         setUndoStack([...undoStack,{ action: 'EDIT', items }]); // Backup the items
         setItems(updatedItems); // Update items with disabled property changed
         setChangesMade(true);
+        setSpinner(false);
 
     };
 
@@ -172,6 +166,7 @@ const HomePage = () => {
 
 
     const handleSaveChanges = async () => {
+        setSpinner(true);
 
         let semaphore = 0;
         let maxSemaphore = 5;
@@ -224,6 +219,7 @@ const HomePage = () => {
         setChangesMade(false);
         setUndoStack([]);
         setRedoStack([]);
+        setSpinner(false);
 
     
 
@@ -256,7 +252,7 @@ const HomePage = () => {
 
     const handleInputChange = (e, itemId) => {
         const newTitle = e.target.value;
-        const change = { action: 'UPDATE', items };
+    
 
         setUndoStack([...undoStack,{ action: 'UPDATE', items }]);
         setItems(items.map((item) => (item.id === itemId ? { ...item, title: newTitle, didChange: true } : item)));
@@ -265,11 +261,11 @@ const HomePage = () => {
 
   
 
-    return (
+    return (<>{spinner?<Spinner/>:
         <div className="flex flex-col w-96  mt-8">
             <h1 className="text-3xl font-bold mb-4">To-Do List</h1>
             <div className="flex items-center justify-between mb-4">
-                <p className="text-lg">Welcome, {user}</p>
+                <p className="text-lg">Welcome, {userName}</p>
                
             </div>
             <div className="mb-4">
@@ -287,7 +283,7 @@ const HomePage = () => {
                     Add
                 </button>
             </div>
-            <div className='h-64 overflow-y-scroll'>
+            <div className='h-64 overflow-auto'>
             <ul>
                 {items.map((item) => (
                     <li key={item.id} className="flex items-center justify-between border-b py-2">
@@ -303,7 +299,7 @@ const HomePage = () => {
                                 disabled={item.disabled}
                                 value={item.title}
                                 onChange={(e) => handleInputChange(e, item.id)}
-                                className="border border-gray-300 px-2 py-1"
+                                className={`border border-gray-300 ${item.disabled?"bg-gray-300 opacity-30":""} px-2 py-1 `}
                             />
                         </div>
                         <button
@@ -347,7 +343,12 @@ const HomePage = () => {
                     </button>
                 </div>
             )}
-        </div>
+            
+        </div>}
+        <ToastContainer />
+        </>
+
+
     );
 };
 
