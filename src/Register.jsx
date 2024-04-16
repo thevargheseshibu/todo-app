@@ -53,7 +53,7 @@ const Register = ({ history }) => {
   return spinner ? (
     <Spinner />
   ) : (
-    <div className="h-96 w-96 mt-8">
+    <div className="h-full w-96 ">
       <h2 className="text-2xl font-bold mb-4">Register</h2>
       <form onSubmit={handleSubmit(onSubmit)} className="max-w-sm">
         <div className="mb-4">

@@ -19,7 +19,7 @@ const App = () => {
             <NavBar />
           </Header>
           <main className="flex-grow flex items-center justify-center ">
-            <Section>
+            <Section >
               <Routes>
                 <Route
                   path="/"

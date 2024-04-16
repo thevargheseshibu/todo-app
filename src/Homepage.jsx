@@ -272,8 +272,7 @@ const HomePage = () => {
     );
     setChangesMade(true);
   };
-  {
-  }
+  
 
   return (
     <>
