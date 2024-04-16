@@ -7,7 +7,7 @@ A React application for managing your tasks with registration, login, and CRUD o
 ![Register](https://github.com/thevargheseshibu/todo-app/blob/master/Todo%20images/Logout.png)
 
 ## Netlify Status: 
-Netlify Deployment Link: https://[your-netlify-app-url]  Vercel Status: Vercel Deployment Link: https://[your-vercel-app-url]  (Replace placeholders with your deployment links)
+Netlify Deployment Link: https://todo-app-three-kappa-63.vercel.app/login Vercel Status: Vercel Deployment Link: https://todo-app-three-kappa-63.vercel.app/login  (Replace placeholders with your deployment links)
 
 ### This project implements a user-friendly To Do List application built with React and styled with Tailwind CSS.
 
